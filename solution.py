@@ -1,12 +1,15 @@
-
+import datetime
+import collections
 import subprocess
 import sys
 
 
-class supahandsBadger:
-    def __init__(self):
-        self.timestamps = self.generateSeed()
-
+class SupahandsBadger:
+    def __init__(self, timestamps=None):
+        self.timestamps = timestamps
+        if self.timestamps is None:
+            self.timestamps = self.generateSeed()
+        
     def generateSeed(self):
         # # run seed.py to get random timestamps
         # result = subprocess.run(['python', "seed.py"], capture_output=True, text=True)
@@ -19,45 +22,104 @@ class supahandsBadger:
 
         return ['2021-06-29 20:00:34', ' 2021-07-05 08:00:34', ' 2021-07-26 06:00:34', ' 2021-07-01 03:00:34', ' 2021-06-12 11:00:34', ' 2021-07-10 11:00:34', ' 2021-07-04 10:00:34', ' 2021-06-16 11:00:34', ' 2021-07-09 10:00:34', ' 2021-07-24 20:00:34', ' 2021-06-28 18:00:34', ' 2021-06-26 14:00:34', ' 2021-07-17 18:00:34', ' 2021-06-21 21:00:34', ' 2021-06-21 08:00:34', ' 2021-06-18 06:00:34', ' 2021-06-02 17:00:34', ' 2021-07-23 02:00:34', ' 2021-06-27 08:00:34', ' 2021-07-14 03:00:34', ' 2021-07-19 12:00:34', ' 2021-07-28 11:00:34', ' 2021-06-08 10:00:34', ' 2021-07-03 01:00:34', ' 2021-07-06 00:00:34', ' 2021-07-30 20:00:34', ' 2021-07-08 01:00:34', ' 2021-07-30 01:00:34', ' 2021-06-05 21:00:34', ' 2021-07-27 02:00:34', ' 2021-06-14 19:00:34', ' 2021-06-22 19:00:34', ' 2021-06-18 14:00:34', ' 2021-06-09 13:00:34', ' 2021-07-20 14:00:34', ' 2021-06-25 04:00:34', ' 2021-07-29 00:00:34', ' 2021-07-16 02:00:34', ' 2021-06-27 23:00:34', ' 2021-07-13 14:00:34', ' 2021-06-13 07:00:34', ' 2021-07-16 21:00:34', ' 2021-06-11 09:00:34', ' 2021-07-25 15:00:34', ' 2021-07-01 21:00:34', ' 2021-06-04 04:00:34', ' 2021-06-07 10:00:34', ' 2021-06-23 14:00:34', ' 2021-07-11 18:00:34', ' 2021-08-01 15:00:34', ' 2021-06-19 08:00:34']
 
-    def calculateBadges(self):
-        timestamp_map = {}
-        import datetime
-        for timestamp in self.timestamps:
+    def calculateLoginsPerDate(self, timestamps):
+        timestampLoginCountMap = {}
+        for timestamp in timestamps:
             date = timestamp.strip().split(' ')[0]
 
             dateStamp = datetime.datetime.strptime(date, "%Y-%m-%d")
 
-            if dateStamp not in timestamp_map:
-                timestamp_map[dateStamp] = 0
-            timestamp_map[dateStamp] += 1     
+            if dateStamp not in timestampLoginCountMap:
+                timestampLoginCountMap[dateStamp] = 0
+            timestampLoginCountMap[dateStamp] += 1   
 
-        sortedDateStamps = sorted(timestamp_map)
-        print(timestamp_map)
-        print(sortedDateStamps)
-        
-        badgeCountMap = {}
-        badgeCount = 0
-        startDate  = str(sortedDateStamps[0])
+        return timestampLoginCountMap
+
+    def calculateConsecutiveLoginDates(self, sortedLoginDates, loginCountMap):
+        consecutiveDatesCountMap = {}
+        startDate  = str(sortedLoginDates[0])  
         endDate    = ""
-        
-        for idx in range(len(sortedDateStamps)-1):
-            targetDate = sortedDateStamps[idx]
-            nextDay = targetDate + datetime.timedelta(days=1)
-            print(targetDate, nextDay, timestamp_map[targetDate])
+        count      = 0
 
-            if sortedDateStamps[idx+1] == nextDay:
-                badgeCount += timestamp_map[targetDate]
+        for idx in range(len(sortedLoginDates)-1):
+            currentDate = sortedLoginDates[idx]
+            nextDay = currentDate + datetime.timedelta(days=1)
+            print(currentDate, nextDay, loginCountMap[currentDate])
+
+            if sortedLoginDates[idx+1] == nextDay:
+                count += loginCountMap[currentDate]
             else:
-                badgeCount += timestamp_map[targetDate]
-                endDate = str(sortedDateStamps[idx])
-                timeline = startDate + "-" + endDate
-                badgeCountMap[timeline] = badgeCount
-                print('new input: ',startDate,endDate,badgeCount,'\n')
+                count += loginCountMap[currentDate]
+                endDate = str(sortedLoginDates[idx])
+                timeline = startDate.split(' ')[0] + " - " + endDate.split(' ')[0]
+                consecutiveDatesCountMap[timeline] = count
+                print('new input: ',startDate,endDate,count,'\n')
 
                 # reset 
-                badgeCount = 0
-                startDate  = str(sortedDateStamps[idx+1])
-                endDate    = ""                
+                count = 0
+                startDate  = str(sortedLoginDates[idx+1])
+                endDate    = "" 
+        return consecutiveDatesCountMap
+
+    def sortLongestPeriodByDescending(self, consecutiveDatesCountMap):
+        return dict(sorted(consecutiveDatesCountMap.items(), key=lambda item: item[1],reverse=True))
+        # return sortedConsecutiveDatesCountMap
+
+    def displayTable(self, consecutiveLogins):
+        print('| START      | END        | LENGTH |', end='\n')
+        print('|------------|------------|--------|', end='\n')
+
+        for login in consecutiveLogins.keys():
+            startDate, endDate = login.split(' - ')
+            length = consecutiveLogins[login]
+            print('| {} | {} |      {} |'.format(startDate, endDate, length), end='\n')
+
+    def calculateBadges(self):
+        #time complexity: O(n)
+        loginCountMap = self.calculateLoginsPerDate(self.timestamps)  
+        
+        #time complexity: O(nlogn)
+        sortedLoginDates = sorted(loginCountMap) 
+
+        #time complexity: O(n)
+        consecutiveDatesCountMap = self.calculateConsecutiveLoginDates(sortedLoginDates, loginCountMap) 
+
+        #time complexity: O(nlogn)
+        sortLongestPeriodByDescending = self.sortLongestPeriodByDescending(consecutiveDatesCountMap) 
+
+        #time complexity: O(m)
+        self.displayTable(sortLongestPeriodByDescending) 
+
+        # print(loginCountMap)
+        # print(sortedLoginDates)
+
+        return None
+
+        
+
+        # badgeCountMap = {}
+        # badgeCount = 0
+        # startDate  = str(sortedLoginDates[0])
+        # endDate    = ""
+        
+        # for idx in range(len(sortedLoginDates)-1):
+        #     targetDate = sortedLoginDates[idx]
+        #     nextDay = targetDate + datetime.timedelta(days=1)
+        #     print(targetDate, nextDay, loginCountMap[targetDate])
+
+        #     if sortedLoginDates[idx+1] == nextDay:
+        #         badgeCount += loginCountMap[targetDate]
+        #     else:
+        #         badgeCount += loginCountMap[targetDate]
+        #         endDate = str(sortedLoginDates[idx])
+        #         timeline = startDate + "-" + endDate
+        #         badgeCountMap[timeline] = badgeCount
+        #         print('new input: ',startDate,endDate,badgeCount,'\n')
+
+        #         # reset 
+        #         badgeCount = 0
+        #         startDate  = str(sortedLoginDates[idx+1])
+        #         endDate    = ""                
 
             
 # loop 1 (2021, 6, 2, 0, 0) , next (2021, 6, 3, 0, 0), actual (2021, 6, 4, 0, 0), count 0 -> 2, reset count start and end date run agian
@@ -65,7 +127,7 @@ class supahandsBadger:
 
 # [datetime.datetime(2021, 6, 2, 0, 0), datetime.datetime(2021, 6, 4, 0, 0), datetime.datetime(2021, 6, 5, 0, 0), datetime.datetime(2021, 6, 7, 0, 0), datetime.datetime(2021, 6, 8, 0, 0), datetime.datetime(2021, 6, 9, 0, 0), datetime.datetime(2021, 6, 11, 0, 0), datetime.datetime(2021, 6, 12, 0, 0), datetime.datetime(2021, 6, 13, 0, 0), datetime.datetime(2021, 6, 14, 0, 0), datetime.datetime(2021, 6, 16, 0, 0), datetime.datetime(2021, 6, 18, 0, 0), datetime.datetime(2021, 6, 19, 0, 0), datetime.datetime(2021, 6, 21, 0, 0), datetime.datetime(2021, 6, 22, 0, 0), datetime.datetime(2021, 6, 23, 0, 0), datetime.datetime(2021, 6, 25, 0, 0), datetime.datetime(2021, 6, 26, 0, 0), datetime.datetime(2021, 6, 27, 0, 0), datetime.datetime(2021, 6, 28, 0, 0), datetime.datetime(2021, 6, 29, 0, 0), datetime.datetime(2021, 7, 1, 0, 0), datetime.datetime(2021, 7, 3, 0, 0), datetime.datetime(2021, 7, 4, 0, 0), datetime.datetime(2021, 7, 5, 0, 0), datetime.datetime(2021, 7, 6, 0, 0), datetime.datetime(2021, 7, 8, 0, 0), datetime.datetime(2021, 7, 9, 0, 0), datetime.datetime(2021, 7, 10, 0, 0), datetime.datetime(2021, 7, 11, 0, 0), datetime.datetime(2021, 7, 13, 0, 0), datetime.datetime(2021, 7, 14, 0, 0), datetime.datetime(2021, 7, 16, 0, 0), datetime.datetime(2021, 7, 17, 0, 0), datetime.datetime(2021, 7, 19, 0, 0), datetime.datetime(2021, 7, 20, 0, 0), datetime.datetime(2021, 7, 23, 0, 0), datetime.datetime(2021, 7, 24, 0, 0), datetime.datetime(2021, 7, 25, 0, 0), datetime.datetime(2021, 7, 26, 0, 0), datetime.datetime(2021, 7, 27, 0, 0), datetime.datetime(2021, 7, 28, 0, 0), datetime.datetime(2021, 7, 29, 0, 0), datetime.datetime(2021, 7, 30, 0, 0), datetime.datetime(2021, 8, 1, 0, 0)]
 
-new = supahandsBadger()
+new = SupahandsBadger()
 new.calculateBadges()
 
 
