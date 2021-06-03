@@ -46,6 +46,54 @@ def testcase3():
     assert (result == expected),"Test case 3 failed!"
     print("Test case 3 Success!")
 
-# testcase1()
-# testcase2()
+def testcase4():
+    data = ['2021-03-13 15:13:05', '2021-03-20 23:13:05']
+
+    new = SupahandsBadger(data)
+    result = new.calculateBadges()
+
+    expected = {'2021-03-20 - 2021-03-20': 1, '2021-03-13 - 2021-03-13': 1}
+
+    if result != expected:
+        print('result: ',result)
+        print('expected: ',expected)
+
+    assert (result == expected),"Test case 4 failed!"
+    print("Test case 4 Success!")    
+
+def testcase5():
+    data = ['2021-03-13 15:13:05', '2021-03-14 23:13:05','2021-03-15 23:13:05','2021-03-20 23:13:05','2021-03-21 23:13:05']
+
+    new = SupahandsBadger(data)
+    result = new.calculateBadges()
+
+    expected = {'2021-03-13 - 2021-03-15': 3, '2021-03-20 - 2021-03-21': 2}
+
+    if result != expected:
+        print('result: ',result)
+        print('expected: ',expected)
+
+    assert (result == expected),"Test case 5 failed!"
+    print("Test case 5 Success!")       
+
+def testcase6():
+    data = ['2021-03-13 15:13:05', '2021-03-14 23:13:05','2021-03-15 23:13:05','2021-03-20 23:13:05','2021-03-25 23:13:05']
+
+    new = SupahandsBadger(data)
+    result = new.calculateBadges()
+
+    expected = {'2021-03-13 - 2021-03-15': 3, '2021-03-25 - 2021-03-25': 1, '2021-03-20 - 2021-03-20': 1}
+
+    if result != expected:
+        print('result: ',result)
+        print('expected: ',expected)
+
+    assert (result == expected),"Test case 6 failed!"
+    print("Test case 6 Success!")   
+
+testcase1()
+testcase2()
 testcase3()
+testcase4()
+testcase5()
+testcase6()
