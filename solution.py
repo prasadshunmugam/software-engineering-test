@@ -1,7 +1,5 @@
 import datetime
-import collections
 import subprocess
-import sys
 
 
 class SupahandsBadger:
@@ -51,7 +49,7 @@ class SupahandsBadger:
             # print('\ncurrentDate: ',currentDate,'expectedPreviousDay: ',expectedPreviousDay,'startDate: ',startDate,'endDate: ',endDate)
             if actualPreviousDay == expectedPreviousDay:
                 count += 1
-                print(' matching: ',endDate,startDate,count)
+                # print(' matching: ',endDate,startDate,count)
             
             else:
                 startDate = str(currentDate)
