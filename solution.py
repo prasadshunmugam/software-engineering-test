@@ -37,26 +37,28 @@ class SupahandsBadger:
         startDate  = ""
         count      = 1
 
+        # loop in the order of descendind dates, eg [2021-3-23, 2021-3-18]
         for idx in range(len(sortedLoginDates)):
             currentDate = sortedLoginDates[idx]
             expectedPreviousDay = sortedLoginDates[idx] - datetime.timedelta(days=1)
 
-            if idx + 1 < len(sortedLoginDates):
+            # current idx is the last element
+            if idx < len(sortedLoginDates)-1:
                 actualPreviousDay = sortedLoginDates[idx+1]
             else:
                 actualPreviousDay = sortedLoginDates[idx]
 
-            print('\ncurrentDate: ',currentDate,'expectedPreviousDay: ',expectedPreviousDay,'startDate: ',startDate,'endDate: ',endDate)
+            # print('\ncurrentDate: ',currentDate,'expectedPreviousDay: ',expectedPreviousDay,'startDate: ',startDate,'endDate: ',endDate)
             if actualPreviousDay == expectedPreviousDay:
                 count += 1
                 print(' matching: ',endDate,startDate,count)
             
             else:
                 startDate = str(currentDate)
-                print(' NOT matching: ',currentDate,expectedPreviousDay,actualPreviousDay,count)
+                # print(' NOT matching: ',currentDate,expectedPreviousDay,actualPreviousDay,count)
                 timeline = startDate.split(' ')[0] + " - " + endDate.split(' ')[0]
                 consecutiveDatesCountMap[timeline] = count
-                print(' new input: ','startDate: ',startDate,'endDate: ',endDate,count)
+                # print(' new input: ','startDate: ',startDate,'endDate: ',endDate,count)
 
                 # reset 
                 count = 1
@@ -74,9 +76,12 @@ class SupahandsBadger:
         
         return consecutiveDatesCountMap
 
+    def secondElement(self,element):
+        return element[1]
+
     def sortLogins(self, consecutiveDatesCountMap):
-        return dict(sorted(consecutiveDatesCountMap.items(), key=lambda item: item[1],reverse=True))
-        # return sortedConsecutiveDatesCountMap
+        # sort in descending order for length of consecutive logins
+        return dict(sorted(consecutiveDatesCountMap.items(), key=self.secondElement, reverse=True))
 
     def displayTable(self, consecutiveLogins):
         print('| START      | END        | LENGTH |', end='\n')
@@ -87,17 +92,18 @@ class SupahandsBadger:
             length = consecutiveLogins[login]
             print('| {} | {} |      {} |'.format(startDate, endDate, length), end='\n')
 
-    def calculateBadges(self):
+    def calculateBadgesToAward(self):
         #time complexity: O(n)
         loginCountMap = self.getUniqueLoginDates(self.timestamps)  
-        
+
         #time complexity: O(nlogn)
         sortedLoginDates = sorted(loginCountMap, reverse=True) 
+        # print('sortedLoginDates: ',sortedLoginDates, end='\n')
 
-        print('sortedLoginDates: ',sortedLoginDates, end='\n')
         #time complexity: O(n)
         consecutiveDatesCountMap = self.calculateConsecutiveLogins(sortedLoginDates, loginCountMap) 
-        print('consecutiveDatesCountMap: ',consecutiveDatesCountMap)
+        # print('consecutiveDatesCountMap: ',consecutiveDatesCountMap)
+
         #time complexity: O(nlogn)
         sortedLoginsMap = self.sortLogins(consecutiveDatesCountMap) 
 
@@ -105,15 +111,3 @@ class SupahandsBadger:
         self.displayTable(sortedLoginsMap) 
 
         return sortedLoginsMap
-
-        
-
-
-
-
-# new = SupahandsBadger()
-# new.calculateBadges()
-
-# what needs to be done
-# convert to date time so we can compare + 1 day 
-# when forming dict we form a data time dict that way everything else is easier
